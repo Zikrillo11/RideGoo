@@ -49,6 +49,15 @@ public class Driver : BaseEntity
         MarkAsUpdated();
     }
 
+    public void UpdateLicenseNumber(string licenseNumber)
+    {
+        if (string.IsNullOrWhiteSpace(licenseNumber))
+            throw new DomainException("Guvohnoma raqami bo'sh bo'lishi mumkin emas.");
+
+        LicenseNumber = licenseNumber;
+        MarkAsUpdated();
+    }
+
     public void GoOnline()
     {
         if (Vehicle is null)

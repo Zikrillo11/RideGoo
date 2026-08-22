@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.Constants;
 
-namespace RideGoo.Shared.Constants
+public static class PricingConstants
 {
-    internal class PricingConstants
-    {
-    }
+    public const decimal BaseFare = 5000m;
+    public const decimal PricePerKm = 2000m;
+    public const string DefaultCurrency = "UZS";
 }

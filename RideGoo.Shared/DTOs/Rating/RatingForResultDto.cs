@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Rating;
 
-namespace RideGoo.Shared.DTOs.Rating
+public class RatingForResultDto
 {
-    internal class RatingForResultDto
-    {
-    }
+    public Guid Id { get; set; }
+    public Guid OrderId { get; set; }
+    public string RatedByUserName { get; set; } = string.Empty;
+    public int Score { get; set; }
+    public string? Comment { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

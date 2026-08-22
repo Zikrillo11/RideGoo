@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Rating;
 
-namespace RideGoo.Shared.DTOs.Rating
+public class RatingForCreateDto
 {
-    internal class RatingForCreateDto
-    {
-    }
+    public Guid OrderId { get; set; }
+    public int Score { get; set; }
+    public string? Comment { get; set; }
 }

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Auth;
 
-namespace RideGoo.Shared.DTOs.Auth
+public class AuthForResultDto
 {
-    internal class AuthForResultDto
-    {
-    }
+    public string Token { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+    public DateTime ExpiresAt { get; set; }
 }

@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Order;
 
-namespace RideGoo.Shared.DTOs.Order
+public class OrderForCreateDto
 {
-    internal class OrderForCreateDto
-    {
-    }
+    public string FromAddress { get; set; } = string.Empty;
+    public double FromLatitude { get; set; }
+    public double FromLongitude { get; set; }
+
+    public string ToAddress { get; set; } = string.Empty;
+    public double ToLatitude { get; set; }
+    public double ToLongitude { get; set; }
+
+    public string Source { get; set; } = "Website";
+    public string? PromoCode { get; set; }  
 }

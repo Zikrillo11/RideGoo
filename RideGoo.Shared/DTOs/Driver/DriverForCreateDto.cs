@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Driver;
 
-namespace RideGoo.Shared.DTOs.Driver
+public class DriverForCreateDto
 {
-    internal class DriverForCreateDto
-    {
-    }
+    public Guid UserId { get; set; }
+    public string LicenseNumber { get; set; } = string.Empty;
 }
