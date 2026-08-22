@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Domain.Common;
 
-namespace RideGoo.Domain.Common
+public class BaseEntity
 {
-    internal class BaseEntity
-    {
-    }
+
 }
