@@ -1,3 +1,10 @@
 <Solution>
+  <Project Path="RideGoo.Admin/RideGoo.Admin.csproj" />
   <Project Path="RideGoo.Api/RideGoo.Api.csproj" />
+  <Project Path="RideGoo.BLL/RideGoo.BLL.csproj" />
+  <Project Path="RideGoo.DAL/RideGoo.DAL.csproj" />
+  <Project Path="RideGoo.Domain/RideGoo.Domain.csproj" />
+  <Project Path="RideGoo.Shared/RideGoo.Shared.csproj" />
+  <Project Path="RideGoo.TelegramBot/RideGoo.TelegramBot.csproj" />
+  <Project Path="RideGoo/RideGoo.csproj" />
 </Solution>
