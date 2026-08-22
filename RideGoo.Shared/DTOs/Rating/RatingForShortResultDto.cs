@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Rating;
 
-namespace RideGoo.Shared.DTOs.Rating
+public class RatingForShortResultDto
 {
-    internal class RatingForShortResultDto
-    {
-    }
+    public Guid Id { get; set; }
+    public int Score { get; set; }
+    public string? Comment { get; set; }
 }

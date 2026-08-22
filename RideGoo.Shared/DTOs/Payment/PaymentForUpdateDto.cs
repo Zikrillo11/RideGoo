@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Payment;
 
-namespace RideGoo.Shared.DTOs.Payment
+public class PaymentForUpdateDto
 {
-    internal class PaymentForUpdateDto
-    {
-    }
+    public bool IsPaid { get; set; }
+    public string Method { get; set; } = string.Empty;
 }

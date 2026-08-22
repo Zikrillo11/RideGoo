@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Vehicle;
 
-namespace RideGoo.Shared.DTOs.Vehicle
+public class VehicleForShortResultDto
 {
-    internal class VehicleForShortResultDto
-    {
-    }
+    public Guid Id { get; set; }
+    public string Brand { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public string PlateNumber { get; set; } = string.Empty;
 }

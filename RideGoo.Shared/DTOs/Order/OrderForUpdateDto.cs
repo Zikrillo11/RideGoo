@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Order;
 
-namespace RideGoo.Shared.DTOs.Order
+public class OrderForUpdateDto
 {
-    internal class OrderForUpdateDto
-    {
-    }
+    public string Status { get; set; } = string.Empty;
+    public decimal? FinalPrice { get; set; }
+    public string? CancellationReason { get; set; }
 }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.PromoCode;
 
-namespace RideGoo.Shared.DTOs.PromoCode
+public class PromoCodeApplyDto
 {
-    internal class PromoCodeApplyDto
-    {
-    }
+    public Guid OrderId { get; set; }
+    public string Code { get; set; } = string.Empty;
 }

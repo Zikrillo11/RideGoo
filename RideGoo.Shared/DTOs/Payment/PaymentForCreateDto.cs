@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Payment;
 
-namespace RideGoo.Shared.DTOs.Payment
+public class PaymentForCreateDto
 {
-    internal class PaymentForCreateDto
-    {
-    }
+    public Guid OrderId { get; set; }
+    public decimal Amount { get; set; }
+    public string Method { get; set; } = "Cash";
 }

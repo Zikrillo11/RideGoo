@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Wallet;
 
-namespace RideGoo.Shared.DTOs.Wallet
+public class WalletForResultDto
 {
-    internal class WalletForResultDto
-    {
-    }
+    public Guid Id { get; set; }
+    public decimal Balance { get; set; }
+    public string Currency { get; set; } = "UZS";
 }

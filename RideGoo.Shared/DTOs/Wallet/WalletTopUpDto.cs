@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Wallet;
 
-namespace RideGoo.Shared.DTOs.Wallet
+public class WalletTopUpDto
 {
-    internal class WalletTopUpDto
-    {
-    }
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
 }

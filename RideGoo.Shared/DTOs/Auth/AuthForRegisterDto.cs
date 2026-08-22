@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace RideGoo.Shared.DTOs.Auth;
 
-namespace RideGoo.Shared.DTOs.Auth
+public class AuthForRegisterDto
 {
-    internal class AuthForRegisterDto
-    {
-    }
+    public string FullName { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
+    public string? Email { get; set; }
 }
