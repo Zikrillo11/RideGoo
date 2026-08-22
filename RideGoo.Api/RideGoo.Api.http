@@ -1,0 +1,6 @@
+@RideGoo.Api_HostAddress = http://localhost:5113
+
+GET {{RideGoo.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,1 +1,3 @@
-<Solution />
+<Solution>
+  <Project Path="RideGoo.Api/RideGoo.Api.csproj" />
+</Solution>
