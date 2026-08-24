@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RideGoo.Shared.DTOs.Payment;
+using RideGoo.Shared.Wrappers;
 
-namespace RideGoo.BLL.Interfaces
+namespace RideGoo.BLL.Interfaces;
+
+public interface IPaymentService
 {
-    internal interface IPaymentService
-    {
-    }
+    Task<Result<PaymentForResultDto>> CreateAsync(PaymentForCreateDto dto);
+    Task<Result<PaymentForResultDto>> GetByOrderIdAsync(Guid orderId);
+    Task<Result<PaymentForResultDto>> UpdateAsync(Guid id, PaymentForUpdateDto dto);
 }

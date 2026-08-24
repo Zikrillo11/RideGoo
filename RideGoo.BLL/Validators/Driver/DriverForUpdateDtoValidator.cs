@@ -1,10 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
+using RideGoo.Shared.DTOs.Driver;
 
-namespace RideGoo.BLL.Validators.Driver
+namespace RideGoo.BLL.Validators.Driver;
+
+public class DriverForUpdateDtoValidator : AbstractValidator<DriverForUpdateDto>
 {
-    internal class DriverForUpdateDtoValidator
+    private static readonly string[] AllowedStatuses = { "Online", "Offline" };
+
+    public DriverForUpdateDtoValidator()
     {
+        RuleFor(x => x.LicenseNumber).NotEmpty();
+        RuleFor(x => x.Status)
+            .Must(s => AllowedStatuses.Contains(s))
+            .WithMessage("Status faqat 'Online' yoki 'Offline' bo'lishi mumkin.");
     }
 }

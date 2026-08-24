@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
+using RideGoo.Shared.DTOs.PromoCode;
 
-namespace RideGoo.BLL.Validators.PromoCode
+namespace RideGoo.BLL.Validators.PromoCode;
+
+public class PromoCodeApplyDtoValidator : AbstractValidator<PromoCodeApplyDto>
 {
-    internal class PromoCodeApplyDtoValidator
+    public PromoCodeApplyDtoValidator()
     {
+        RuleFor(x => x.OrderId).NotEmpty();
+        RuleFor(x => x.Code).NotEmpty();
     }
 }

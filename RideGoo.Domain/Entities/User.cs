@@ -47,6 +47,13 @@ public class User : BaseEntity
         };
     }
 
+    public static User RegisterAdmin(string fullName, string phoneNumber, string passwordHash)
+    {
+        var user = Register(fullName, phoneNumber, passwordHash);
+        user.Role = UserRole.Admin;
+        return user;
+    }
+
     public void PromoteToDriver()
     {
         if (Role == UserRole.Admin)

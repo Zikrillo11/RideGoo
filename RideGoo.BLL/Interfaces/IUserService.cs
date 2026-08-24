@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RideGoo.Shared.DTOs.User;
+using RideGoo.Shared.Params;
+using RideGoo.Shared.Wrappers;
 
-namespace RideGoo.BLL.Interfaces
+namespace RideGoo.BLL.Interfaces;
+
+public interface IUserService
 {
-    internal interface IUserService
-    {
-    }
+    Task<Result<UserForResultDto>> GetByIdAsync(Guid id);
+    Task<Result<PagedResult<UserForShortResultDto>>> GetAllAsync(PaginationParams paginationParams);
+    Task<Result<UserForResultDto>> UpdateAsync(Guid id, UserForUpdateDto dto);
+    Task<Result<bool>> DeleteAsync(Guid id);
 }

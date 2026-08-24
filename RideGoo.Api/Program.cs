@@ -1,27 +1,43 @@
-using Microsoft.EntityFrameworkCore;
+using RideGoo.Api.Configuration;
+using RideGoo.Api.Filters;
+using RideGoo.Api.Middleware;
 using RideGoo.DAL.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// ---------- Configuration modullari ----------
+builder.Services.AddDatabaseConfiguration(builder.Configuration);
+builder.Services.AddApplicationServicesConfiguration();
+builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
+builder.Services.AddSwaggerConfiguration();
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidationFilter>();
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ---------- Global Exception Handling — eng boshida ----------
+app.UseGlobalExceptionHandling();
+
+// ---------- Admin foydalanuvchini avtomatik yaratish ----------
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbSeeder.SeedAdminAsync(dbContext);
+}
+
+// ---------- Middleware pipeline ----------
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

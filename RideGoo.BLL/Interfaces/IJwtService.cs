@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using RideGoo.Domain.Entities;
 
-namespace RideGoo.BLL.Interfaces
+namespace RideGoo.BLL.Interfaces;
+
+public interface IJwtService
 {
-    internal interface IJwtService
-    {
-    }
+    (string token, DateTime expiresAt) GenerateToken(User user);
 }
