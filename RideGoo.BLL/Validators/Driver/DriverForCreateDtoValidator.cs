@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
+using RideGoo.Shared.DTOs.Driver;
 
-namespace RideGoo.BLL.Validators.Driver
+namespace RideGoo.BLL.Validators.Driver;
+
+public class DriverForCreateDtoValidator : AbstractValidator<DriverForCreateDto>
 {
-    internal class DriverForCreateDtoValidator
+    public DriverForCreateDtoValidator()
     {
+        RuleFor(x => x.UserId).NotEmpty();
+        RuleFor(x => x.LicenseNumber).NotEmpty().MaximumLength(50);
     }
 }

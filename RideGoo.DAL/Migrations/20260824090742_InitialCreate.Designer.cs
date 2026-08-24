@@ -12,7 +12,7 @@ using RideGoo.DAL.Data;
 namespace RideGoo.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260822072224_InitialCreate")]
+    [Migration("20260824090742_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

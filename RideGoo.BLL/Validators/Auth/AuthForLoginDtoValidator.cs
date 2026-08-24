@@ -1,10 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
+using RideGoo.Shared.DTOs.Auth;
 
-namespace RideGoo.BLL.Validators.Auth
+namespace RideGoo.BLL.Validators.Auth;
+
+public class AuthForLoginDtoValidator : AbstractValidator<AuthForLoginDto>
 {
-    internal class AuthForLoginDtoValidator
+    public AuthForLoginDtoValidator()
     {
+        RuleFor(x => x.PhoneNumber).NotEmpty();
+        RuleFor(x => x.Password).NotEmpty();
     }
 }

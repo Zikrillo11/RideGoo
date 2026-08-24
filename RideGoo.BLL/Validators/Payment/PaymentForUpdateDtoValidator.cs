@@ -1,10 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using FluentValidation;
+using RideGoo.Shared.DTOs.Payment;
 
-namespace RideGoo.BLL.Validators.Payment
+namespace RideGoo.BLL.Validators.Payment;
+
+public class PaymentForUpdateDtoValidator : AbstractValidator<PaymentForUpdateDto>
 {
-    internal class PaymentForUpdateDtoValidator
+    private static readonly string[] AllowedMethods = { "Cash", "Card", "Wallet" };
+
+    public PaymentForUpdateDtoValidator()
     {
+        RuleFor(x => x.Method).Must(m => AllowedMethods.Contains(m));
     }
 }
