@@ -14,12 +14,19 @@ builder.Services.AddSwaggerConfiguration();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
+
 });
+
+builder.Services.AddCorsConfiguration();
+
+// ...
 
 var app = builder.Build();
 
-// ---------- Global Exception Handling — eng boshida ----------
 app.UseGlobalExceptionHandling();
+
+// Muhim: UseCorsConfiguration() — UseAuthentication()dan OLDIN turishi kerak
+app.UseCorsConfiguration(); 
 
 // ---------- Admin foydalanuvchini avtomatik yaratish ----------
 using (var scope = app.Services.CreateScope())
