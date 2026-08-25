@@ -22,7 +22,17 @@ public class AppDbContext : DbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
-        // Soft delete: barcha so'rovlarda IsDeleted=true bo'lganlar avtomatik chiqarib tashlanadi
+        // Barcha Entity'larning Id'si domenda (Guid.NewGuid()) generatsiya qilinadi,
+        // shuning uchun EF Core'ga buni "baza o'zi generatsiya qiladi" deb taxmin qilmaslikni aytamiz.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(RideGoo.Domain.Common.BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                modelBuilder.Entity(entityType.ClrType).Property("Id").ValueGeneratedNever();
+            }
+        }
+
+        // Soft delete filterlar
         modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Driver>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Vehicle>().HasQueryFilter(e => !e.IsDeleted);
@@ -32,7 +42,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Wallet>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PromoCode>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Notification>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<PromoRedemption>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<WalletTransaction>().HasQueryFilter(e => !e.IsDeleted);
 
         base.OnModelCreating(modelBuilder);
     }
+
+
 }
