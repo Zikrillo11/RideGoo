@@ -10,12 +10,6 @@ public static class DatabaseConfiguration
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-
-            options.LogTo(
-                message => System.IO.File.AppendAllText(@"C:\temp\efcore-log.txt", message + Environment.NewLine),
-                LogLevel.Information);
-
-            options.EnableSensitiveDataLogging();
         });
 
         return services;
