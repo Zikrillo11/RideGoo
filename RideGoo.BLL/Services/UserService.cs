@@ -84,4 +84,39 @@ public class UserService : IUserService
 
         return Result<bool>.Success(true);
     }
+
+    public async Task<Result<UserForResultDto>> CreateAsync(UserForCreateDto dto)
+    {
+        var alreadyExists = await _unitOfWork.Users.ExistsByPhoneNumberAsync(dto.PhoneNumber);
+        if (alreadyExists)
+            return Result<UserForResultDto>.Failure("Bu telefon raqam bilan foydalanuvchi allaqachon mavjud.");
+
+        try
+        {
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            var user = dto.Role == "Admin"
+                ? Domain.Entities.User.RegisterAdmin(dto.FullName, dto.PhoneNumber, passwordHash)
+                : Domain.Entities.User.Register(dto.FullName, dto.PhoneNumber, passwordHash, dto.Email);
+
+            await _unitOfWork.Users.AddAsync(user);
+
+            var wallet = Domain.Entities.Wallet.CreateFor(user.Id);
+            await _unitOfWork.Wallets.AddAsync(wallet);
+
+            if (dto.Role == "Driver")
+            {
+                user.PromoteToDriver();
+                var driver = Domain.Entities.Driver.Create(user.Id, dto.LicenseNumber ?? "N/A");
+                await _unitOfWork.Drivers.AddAsync(driver);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<UserForResultDto>.Success(_mapper.Map<UserForResultDto>(user));
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            return Result<UserForResultDto>.Failure(ex.Message);
+        }
+    }
 }
