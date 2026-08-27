@@ -10,4 +10,5 @@ public interface IUserService
     Task<Result<PagedResult<UserForShortResultDto>>> GetAllAsync(PaginationParams paginationParams);
     Task<Result<UserForResultDto>> UpdateAsync(Guid id, UserForUpdateDto dto);
     Task<Result<bool>> DeleteAsync(Guid id);
+    Task<Result<UserForResultDto>> CreateAsync(UserForCreateDto dto);
 }

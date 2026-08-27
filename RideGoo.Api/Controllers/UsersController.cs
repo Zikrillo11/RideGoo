@@ -22,6 +22,18 @@ public class UsersController : BaseApiController
     /// <summary>Barcha foydalanuvchilarni sahifalab (paginated) qaytaradi.</summary>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+
+
+    [HttpPost]
+    [ProducesResponseType(typeof(UserForResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create([FromBody] UserForCreateDto dto)
+    {
+        var result = await _userService.CreateAsync(dto);
+        return HandleResult(result);
+    }
+
+
     public async Task<IActionResult> GetAll([FromQuery] PaginationParams paginationParams)
     {
         var result = await _userService.GetAllAsync(paginationParams);
