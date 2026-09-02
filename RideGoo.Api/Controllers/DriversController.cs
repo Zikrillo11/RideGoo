@@ -29,6 +29,18 @@ public class DriversController : BaseApiController
         return HandleResult(result);
     }
 
+    /// <summary>Joriy foydalanuvchining haydovchi profilini qaytaradi.</summary>
+    [Authorize(Roles = "Driver")]
+    [HttpGet("my")]
+    [ProducesResponseType(typeof(DriverForResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetMyProfile()
+    {
+        var userId = GetCurrentUserId();
+        var result = await _driverService.GetByUserIdAsync(userId);
+        return HandleNotFoundResult(result);
+    }
+
     /// <summary>ID bo'yicha haydovchi profilini qaytaradi.</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType(typeof(DriverForResultDto), StatusCodes.Status200OK)]

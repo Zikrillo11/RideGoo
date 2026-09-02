@@ -8,6 +8,7 @@ public interface IDriverService
 {
     Task<Result<DriverForResultDto>> CreateAsync(DriverForCreateDto dto);
     Task<Result<DriverForResultDto>> GetByIdAsync(Guid id);
+    Task<Result<DriverForResultDto>> GetByUserIdAsync(Guid userId);
     Task<Result<PagedResult<DriverForShortResultDto>>> GetOnlineDriversAsync(PaginationParams paginationParams);
     Task<Result<DriverForResultDto>> UpdateAsync(Guid id, DriverForUpdateDto dto);
 }

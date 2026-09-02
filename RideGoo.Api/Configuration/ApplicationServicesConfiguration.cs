@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using RideGoo.Api.Hubs;
 using RideGoo.BLL.Interfaces;
 using RideGoo.BLL.Mappings;
 using RideGoo.BLL.Services;
@@ -14,6 +15,9 @@ public static class ApplicationServicesConfiguration
     {
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // SignalR notification wrapper
+        services.AddScoped<INotificationHub, NotificationHubService>();
 
         // Business Services
         services.AddScoped<IAuthService, AuthService>();
@@ -31,7 +35,7 @@ public static class ApplicationServicesConfiguration
         // AutoMapper
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
-        // FluentValidation — RideGoo.BLL assembly'sidagi barcha validatorlarni topadi
+        // FluentValidation
         services.AddValidatorsFromAssemblyContaining<AuthForRegisterDtoValidator>();
 
         return services;

@@ -12,7 +12,7 @@ namespace RideGoo.Api.Controllers;
 [Authorize]
 public class OrdersController : BaseApiController
 {
-    private readonly IOrderService _orderService;
+    private readonly IOrderService _orderService;   
 
     public OrdersController(IOrderService orderService)
     {
@@ -51,6 +51,18 @@ public class OrdersController : BaseApiController
         var result = await _orderService.GetByCustomerIdAsync(customerId, paginationParams);
         return Ok(result.Data);
     }
+
+
+    /// <summary>Hozir kutilayotgan (hali hech kimga biriktirilmagan) buyurtmalar. Faqat Driver.</summary>
+    [Authorize(Roles = "Driver")]
+    [HttpGet("pending")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPendingOrders([FromQuery] PaginationParams paginationParams)
+    {
+        var result = await _orderService.GetPendingOrdersAsync(paginationParams);
+        return Ok(result.Data);
+    }   
+
 
     /// <summary>Haydovchining barcha buyurtmalar tarixini sahifalab qaytaradi.</summary>
     [Authorize(Roles = "Driver")]

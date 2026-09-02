@@ -2,6 +2,7 @@ using RideGoo.Api.Configuration;
 using RideGoo.Api.Filters;
 using RideGoo.Api.Middleware;
 using RideGoo.DAL.Data;
+using RideGoo.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,10 +13,13 @@ builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
 builder.Services.AddSwaggerConfiguration();
 
 builder.Services.AddControllers(options =>
+
 {
     options.Filters.Add<ValidationFilter>();
 
 });
+
+builder.Services.AddSignalR();
 
 builder.Services.AddCorsConfiguration();
 
@@ -46,6 +50,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<RideHub>("/hubs/ride");
 
 app.MapControllers();
 
