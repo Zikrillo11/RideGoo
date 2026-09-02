@@ -19,11 +19,7 @@ public class UsersController : BaseApiController
         _userService = userService;
     }
 
-    /// <summary>Barcha foydalanuvchilarni sahifalab (paginated) qaytaradi.</summary>
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-
-
+    /// <summary>Yangi foydalanuvchi yaratadi (istalgan rolda).</summary>
     [HttpPost]
     [ProducesResponseType(typeof(UserForResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -33,7 +29,9 @@ public class UsersController : BaseApiController
         return HandleResult(result);
     }
 
-
+    /// <summary>Barcha foydalanuvchilarni sahifalab (paginated) qaytaradi.</summary>
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAll([FromQuery] PaginationParams paginationParams)
     {
         var result = await _userService.GetAllAsync(paginationParams);

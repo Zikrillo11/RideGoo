@@ -17,11 +17,13 @@ public class OrderService : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly INotificationHub _notificationHub;
 
-    public OrderService(IUnitOfWork unitOfWork, IMapper mapper)
+    public OrderService(IUnitOfWork unitOfWork, IMapper mapper, INotificationHub notificationHub)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _notificationHub = notificationHub;
     }
 
     public async Task<Result<OrderForResultDto>> CreateAsync(Guid customerId, OrderForCreateDto dto)
@@ -60,6 +62,14 @@ public class OrderService : IOrderService
             }
 
             await _unitOfWork.SaveChangesAsync();
+
+            await _notificationHub.SendNewOrderToDriversAsync(new
+            {
+                OrderId = order.Id,
+                FromAddress = order.FromAddress,
+                ToAddress = order.ToAddress,
+                EstimatedPrice = order.EstimatedPrice.Amount
+            });
 
             var created = await _unitOfWork.Orders.Query()
                 .Include(o => o.Customer)
@@ -154,6 +164,13 @@ public class OrderService : IOrderService
             _unitOfWork.Drivers.Update(driver);
             await _unitOfWork.SaveChangesAsync();
 
+            await _notificationHub.SendOrderUpdateToUserAsync(order.CustomerId, new
+            {
+                OrderId = order.Id,
+                Status = "Accepted",
+                DriverName = driver.User.FullName
+            });
+
             return Result<OrderForResultDto>.Success(_mapper.Map<OrderForResultDto>(order));
         }
         catch (DomainException ex)
@@ -204,11 +221,39 @@ public class OrderService : IOrderService
             _unitOfWork.Orders.Update(order);
             await _unitOfWork.SaveChangesAsync();
 
+            await _notificationHub.SendOrderUpdateToUserAsync(order.CustomerId, new
+            {
+                OrderId = order.Id,
+                Status = order.Status.ToString()
+            });
+
             return Result<OrderForResultDto>.Success(_mapper.Map<OrderForResultDto>(order));
         }
         catch (DomainException ex)
         {
             return Result<OrderForResultDto>.Failure(ex.Message);
         }
+    }
+
+    public async Task<Result<PagedResult<OrderForShortResultDto>>> GetPendingOrdersAsync(PaginationParams paginationParams)
+    {
+        var query = _unitOfWork.Orders.Query()
+            .Where(o => o.Status == OrderStatus.Pending)
+            .OrderByDescending(o => o.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+
+        var orders = await query
+            .Skip((paginationParams.PageNumber - 1) * paginationParams.PageSize)
+            .Take(paginationParams.PageSize)
+            .ToListAsync();
+
+        return Result<PagedResult<OrderForShortResultDto>>.Success(new PagedResult<OrderForShortResultDto>
+        {
+            Items = _mapper.Map<List<OrderForShortResultDto>>(orders),
+            PageNumber = paginationParams.PageNumber,
+            PageSize = paginationParams.PageSize,
+            TotalCount = totalCount
+        });
     }
 }

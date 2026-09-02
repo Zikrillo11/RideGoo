@@ -66,6 +66,19 @@ public class DriverService : IDriverService
         return Result<DriverForResultDto>.Success(_mapper.Map<DriverForResultDto>(driver));
     }
 
+    public async Task<Result<DriverForResultDto>> GetByUserIdAsync(Guid userId)
+    {
+        var driver = await _unitOfWork.Drivers.Query()
+            .Include(d => d.User)
+            .Include(d => d.Vehicle)
+            .FirstOrDefaultAsync(d => d.UserId == userId);
+
+        if (driver is null)
+            return Result<DriverForResultDto>.Failure("Sizda haydovchi profili topilmadi.");
+
+        return Result<DriverForResultDto>.Success(_mapper.Map<DriverForResultDto>(driver));
+    }
+
     public async Task<Result<PagedResult<DriverForShortResultDto>>> GetOnlineDriversAsync(PaginationParams paginationParams)
     {
         var query = _unitOfWork.Drivers.Query()
