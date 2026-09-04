@@ -1,7 +1,10 @@
-﻿namespace RideGoo.Domain.Interfaces;
+﻿
+
+namespace RideGoo.Domain.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {
+    IWithdrawalRequestRepository WithdrawalRequests { get; }
     IUserRepository Users { get; }
     IDriverRepository Drivers { get; }
     IVehicleRepository Vehicles { get; }
@@ -11,6 +14,7 @@ public interface IUnitOfWork : IDisposable
     IWalletRepository Wallets { get; }
     IPromoCodeRepository PromoCodes { get; }
     INotificationRepository Notifications { get; }
+
 
     Task<int> SaveChangesAsync();
 }

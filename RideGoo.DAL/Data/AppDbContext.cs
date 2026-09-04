@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
     public DbSet<PromoRedemption> PromoRedemptions => Set<PromoRedemption>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<WithdrawalRequest> WithdrawalRequests => Set<WithdrawalRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Notification>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PromoRedemption>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<WalletTransaction>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<WithdrawalRequest>().HasQueryFilter(e => !e.IsDeleted);
 
         base.OnModelCreating(modelBuilder);
     }

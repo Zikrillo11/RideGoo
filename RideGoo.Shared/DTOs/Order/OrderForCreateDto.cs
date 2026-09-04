@@ -11,5 +11,6 @@ public class OrderForCreateDto
     public double ToLongitude { get; set; }
 
     public string Source { get; set; } = "Website";
-    public string? PromoCode { get; set; }  
+    public string? PromoCode { get; set; }
+    public string PaymentMethod { get; set; } = "Cash"; // Cash | Card
 }

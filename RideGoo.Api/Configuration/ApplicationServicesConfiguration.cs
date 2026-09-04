@@ -31,6 +31,7 @@ public static class ApplicationServicesConfiguration
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IPromoCodeService, PromoCodeService>();
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IWithdrawalService, WithdrawalService>();
 
         // AutoMapper
         services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());

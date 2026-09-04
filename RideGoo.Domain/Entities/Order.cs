@@ -7,6 +7,8 @@ namespace RideGoo.Domain.Entities;
 
 public class Order : BaseEntity
 {
+
+    public PaymentMethod PaymentMethod { get; private set; }
     public Guid CustomerId { get; private set; }
     public User Customer { get; private set; } = null!;
 
@@ -38,7 +40,8 @@ public class Order : BaseEntity
     private Order() { }
 
     public static Order Create(Guid customerId, string fromAddress, GeoLocation fromLocation,
-        string toAddress, GeoLocation toLocation, Money estimatedPrice, double distanceKm, OrderSource source)
+    string toAddress, GeoLocation toLocation, Money estimatedPrice, double distanceKm,
+    OrderSource source, PaymentMethod paymentMethod)
     {
         return new Order
         {
@@ -50,10 +53,10 @@ public class Order : BaseEntity
             EstimatedPrice = estimatedPrice,
             DistanceKm = distanceKm,
             Source = source,
+            PaymentMethod = paymentMethod,
             Status = OrderStatus.Pending
         };
     }
-
     public void ApplyPromo(PromoRedemption redemption, Money discountedPrice)
     {
         if (Status != OrderStatus.Pending)

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Clock, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import api from '../../services/api';
 import { SkeletonList } from '../../components/Skeleton';
+import RatingModal from '../../components/RatingModal';
 
 const statusLabels = {
   Pending: 'Kutilmoqda',
@@ -28,6 +29,7 @@ export default function MyOrders() {
   const [pageNumber, setPageNumber] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [ratingOrderId, setRatingOrderId] = useState(null);
 
   const loadOrders = async (page) => {
     setLoading(true);
@@ -83,7 +85,7 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <p className="font-semibold text-gray-900 text-sm">
                     {order.estimatedPrice.toLocaleString()} som
                   </p>
@@ -94,6 +96,14 @@ export default function MyOrders() {
                   >
                     {statusLabels[order.status] || order.status}
                   </span>
+                  {order.status === 'Completed' && (
+                    <button
+                      onClick={() => setRatingOrderId(order.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full hover:bg-amber-100 transition-colors"
+                    >
+                      <Star className="w-3.5 h-3.5" /> Baho berish
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -121,6 +131,14 @@ export default function MyOrders() {
             </div>
           )}
         </>
+      )}
+
+      {ratingOrderId && (
+        <RatingModal
+          orderId={ratingOrderId}
+          onClose={() => setRatingOrderId(null)}
+          onSuccess={() => loadOrders(pageNumber)}
+        />
       )}
     </div>
   );
