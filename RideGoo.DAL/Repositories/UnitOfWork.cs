@@ -7,6 +7,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly AppDbContext _context;
 
+    private IWithdrawalRequestRepository? _withdrawalRequests;
     private IUserRepository? _users;
     private IDriverRepository? _drivers;
     private IVehicleRepository? _vehicles;
@@ -19,6 +20,8 @@ public class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(AppDbContext context) => _context = context;
 
+
+    public IWithdrawalRequestRepository WithdrawalRequests => _withdrawalRequests ??= new WithdrawalRequestRepository(_context);
     public IUserRepository Users => _users ??= new UserRepository(_context);
     public IDriverRepository Drivers => _drivers ??= new DriverRepository(_context);
     public IVehicleRepository Vehicles => _vehicles ??= new VehicleRepository(_context);

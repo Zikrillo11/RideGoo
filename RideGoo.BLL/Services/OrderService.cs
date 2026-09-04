@@ -44,7 +44,8 @@ public class OrderService : IOrderService
 
             var order = Order.Create(customerId, dto.FromAddress, fromLocation,
                 dto.ToAddress, toLocation, estimatedPrice, distanceKm,
-                Enum.Parse<OrderSource>(dto.Source));
+                Enum.Parse<OrderSource>(dto.Source),
+                Enum.Parse<PaymentMethod>(dto.PaymentMethod));
 
             await _unitOfWork.Orders.AddAsync(order);
 
@@ -203,8 +204,28 @@ public class OrderService : IOrderService
 
                 case "Completed":
                     var finalAmount = dto.FinalPrice ?? order.EstimatedPrice.Amount;
-                    order.Complete(Money.Create(finalAmount, order.EstimatedPrice.Currency));
-                    if (order.Driver is not null) _unitOfWork.Drivers.Update(order.Driver);
+                    var finalPrice = Money.Create(finalAmount, order.EstimatedPrice.Currency);
+                    order.Complete(finalPrice);
+
+                    if (order.Driver is not null)
+                    {
+                        _unitOfWork.Drivers.Update(order.Driver);
+
+                        // Faqat Karta orqali to'langan bo'lsa, pul avtomatik taqsimlanadi.
+                        // Naqd to'lovda pul to'g'ridan-to'g'ri haydovchiga qo'lda beriladi.
+                        if (order.PaymentMethod == PaymentMethod.Card)
+                        {
+                            var driverWallet = await _unitOfWork.Wallets.GetByUserIdAsync(order.Driver.UserId);
+                            if (driverWallet is not null)
+                            {
+                                var commissionAmount = finalPrice.Amount * (PricingConstants.PlatformCommissionPercent / 100m);
+                                var driverEarning = Money.Create(finalPrice.Amount - commissionAmount, finalPrice.Currency);
+
+                                driverWallet.Receive(driverEarning, $"Buyurtma daromadi (#{order.Id.ToString()[..8]})");
+                                _unitOfWork.Wallets.Update(driverWallet);
+                            }
+                        }
+                    }
                     break;
 
                 case "CancelledByCustomer":

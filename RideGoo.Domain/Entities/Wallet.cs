@@ -47,6 +47,15 @@ public class Wallet : BaseEntity
         return transaction;
     }
 
+    public WalletTransaction Receive(Money amount, string? description = null)
+    {
+        Balance = Balance.Add(amount);
+        var transaction = WalletTransaction.Create(Id, amount, WalletTransactionType.TopUp, description);
+        _transactions.Add(transaction);
+        MarkAsUpdated();
+        return transaction;
+    }
+
     public WalletTransaction Refund(Money amount, string? description = null)
     {
         Balance = Balance.Add(amount);
