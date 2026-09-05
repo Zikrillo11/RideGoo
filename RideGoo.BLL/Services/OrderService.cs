@@ -205,14 +205,26 @@ public class OrderService : IOrderService
                 case "Completed":
                     var finalAmount = dto.FinalPrice ?? order.EstimatedPrice.Amount;
                     var finalPrice = Money.Create(finalAmount, order.EstimatedPrice.Currency);
+
+                    if (order.PaymentMethod == PaymentMethod.Card)
+                    {
+                        var customerWallet = await _unitOfWork.Wallets.GetByUserIdAsync(order.CustomerId);
+                        if (customerWallet is null)
+                            return Result<OrderForResultDto>.Failure("Mijozning hamyoni topilmadi.");
+
+                        if (customerWallet.Balance.Amount < finalPrice.Amount)
+                            return Result<OrderForResultDto>.Failure("Mijoz hamyonida yetarli mablag' yo'q. Naqd tolash tavsiya etiladi.");
+
+                        customerWallet.Pay(finalPrice, $"Buyurtma tolovi (#{order.Id.ToString()[..8]})");
+                        _unitOfWork.Wallets.Update(customerWallet);
+                    }
+
                     order.Complete(finalPrice);
 
                     if (order.Driver is not null)
                     {
                         _unitOfWork.Drivers.Update(order.Driver);
 
-                        // Faqat Karta orqali to'langan bo'lsa, pul avtomatik taqsimlanadi.
-                        // Naqd to'lovda pul to'g'ridan-to'g'ri haydovchiga qo'lda beriladi.
                         if (order.PaymentMethod == PaymentMethod.Card)
                         {
                             var driverWallet = await _unitOfWork.Wallets.GetByUserIdAsync(order.Driver.UserId);

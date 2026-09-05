@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-lea
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
-import { MapPin, Navigation, Tag, Search, CheckCircle2 } from 'lucide-react';
+import { MapPin, Navigation, Tag, Search, CheckCircle2, Banknote, CreditCard } from 'lucide-react';
 import api from '../../services/api';
 import { useSignalR } from '../../hooks/useSignalR';
 
@@ -127,10 +127,10 @@ export default function OrderCreate() {
   const [pickingMode, setPickingMode] = useState('from');
   const [flyTarget, setFlyTarget] = useState(null);
   const [promoCode, setPromoCode] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Real-time: buyurtma holati ozgarganda avtomatik bildirishnoma
   useSignalR(null, (data) => {
     setResult((prev) => {
       if (prev && prev.id === data.orderId) {
@@ -183,6 +183,7 @@ export default function OrderCreate() {
         toLongitude: toCoords[1],
         source: 'Website',
         promoCode: promoCode || null,
+        paymentMethod,
       });
 
       setResult(response.data);
@@ -278,6 +279,41 @@ export default function OrderCreate() {
               >
                 <Navigation className="w-3.5 h-3.5" /> Qayerga
               </button>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">
+                To'lov usuli
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('Cash')}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    paymentMethod === 'Cash'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  <Banknote className="w-3.5 h-3.5" /> Naqd
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('Card')}
+                  className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                    paymentMethod === 'Card'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5" /> Hamyondan
+                </button>
+              </div>
+              {paymentMethod === 'Card' && (
+                <p className="text-xs text-amber-600 mt-1.5">
+                  Diqqat: summa hamyoningizdan yechiladi. Hamyonda yetarli mablag' borligiga ishonch hosil qiling.
+                </p>
+              )}
             </div>
 
             <div>
