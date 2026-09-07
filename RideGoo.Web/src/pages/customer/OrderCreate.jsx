@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
@@ -130,6 +130,8 @@ export default function OrderCreate() {
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [routeDistanceKm, setRouteDistanceKm] = useState(null);
 
   useSignalR(null, (data) => {
     setResult((prev) => {
@@ -142,6 +144,36 @@ export default function OrderCreate() {
     const message = statusMessages[data.status] || `Buyurtma holati: ${data.status}`;
     toast.success(message, { duration: 5000 });
   });
+
+  // Ikkala nuqta belgilanganda, OSRM orqali haqiqiy yol chizigini olamiz
+  useEffect(() => {
+    if (!fromCoords || !toCoords) {
+      setRouteCoords([]);
+      setRouteDistanceKm(null);
+      return;
+    }
+
+    const fetchRoute = async () => {
+      try {
+        const url = `https://router.project-osrm.org/route/v1/driving/${fromCoords[1]},${fromCoords[0]};${toCoords[1]},${toCoords[0]}?overview=full&geometries=geojson`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const coords = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+          setRouteCoords(coords);
+          setRouteDistanceKm(route.distance / 1000);
+        }
+      } catch (err) {
+        // Yol topilmasa, jim davom etamiz (baribir togri chiziq bilan buyurtma berish mumkin)
+        setRouteCoords([]);
+        setRouteDistanceKm(null);
+      }
+    };
+
+    fetchRoute();
+  }, [fromCoords, toCoords]);
 
   const handleMapClick = (coords) => {
     if (pickingMode === 'from') {
@@ -255,6 +287,15 @@ export default function OrderCreate() {
                 </p>
               )}
             </div>
+
+            {routeDistanceKm !== null && (
+              <div className="flex items-center gap-2 px-3 py-2.5 bg-blue-50 rounded-lg">
+                <Navigation className="w-4 h-4 text-blue-600" />
+                <p className="text-sm text-blue-700 font-medium">
+                  Yol boyicha masofa: {routeDistanceKm.toFixed(1)} km
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
@@ -373,6 +414,9 @@ export default function OrderCreate() {
             <FlyToLocation position={flyTarget} />
             {fromCoords && <Marker position={fromCoords} />}
             {toCoords && <Marker position={toCoords} />}
+            {routeCoords.length > 0 && (
+              <Polyline positions={routeCoords} color="#1f2937" weight={4} opacity={0.8} />
+            )}
           </MapContainer>
         </div>
       </div>
