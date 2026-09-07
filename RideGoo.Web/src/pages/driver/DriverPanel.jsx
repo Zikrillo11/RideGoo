@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Power, MapPin, Clock, CheckCircle2, Navigation } from 'lucide-react';
+import { Power, MapPin, Clock, CheckCircle2, Navigation, Wallet as WalletIcon, ArrowUpFromLine } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSignalR } from '../../hooks/useSignalR';
@@ -12,14 +12,33 @@ const statusLabels = {
   CancelledByDriver: 'Bekor qilindi',
 };
 
+const withdrawalStatusStyles = {
+  Pending: 'bg-amber-50 text-amber-700',
+  Approved: 'bg-green-50 text-green-700',
+  Rejected: 'bg-red-50 text-red-700',
+};
+
+const withdrawalStatusLabels = {
+  Pending: 'Kutilmoqda',
+  Approved: 'Tasdiqlandi',
+  Rejected: 'Rad etildi',
+};
+
 export default function DriverPanel() {
   const { user } = useAuth();
   const [driverInfo, setDriverInfo] = useState(null);
   const [myOrders, setMyOrders] = useState([]);
   const [pendingOrders, setPendingOrders] = useState([]);
+  const [wallet, setWallet] = useState(null);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+
+  const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawCard, setWithdrawCard] = useState('');
+  const [submittingWithdraw, setSubmittingWithdraw] = useState(false);
 
   const loadDriverData = async () => {
     setLoading(true);
@@ -28,12 +47,16 @@ export default function DriverPanel() {
       const driverRes = await api.get('/Drivers/my');
       setDriverInfo(driverRes.data);
 
-      const [ordersRes, pendingRes] = await Promise.all([
+      const [ordersRes, pendingRes, walletRes, withdrawalsRes] = await Promise.all([
         api.get(`/Orders/driver/${driverRes.data.id}`, { params: { pageNumber: 1, pageSize: 10 } }),
         api.get('/Orders/pending', { params: { pageNumber: 1, pageSize: 10 } }),
+        api.get('/Wallet/my'),
+        api.get('/Withdrawals/my'),
       ]);
       setMyOrders(ordersRes.data.items);
       setPendingOrders(pendingRes.data.items);
+      setWallet(walletRes.data);
+      setWithdrawals(withdrawalsRes.data);
     } catch (err) {
       const message = err.response?.data?.message || 'Malumotlarni yuklashda xatolik yuz berdi.';
       setError(message);
@@ -47,7 +70,6 @@ export default function DriverPanel() {
     loadDriverData();
   }, []);
 
-  // Real-time: yangi buyurtma kelganda avtomatik yangilaymiz va bildirishnoma korsatamiz
   useSignalR(
     (data) => {
       toast.success(`Yangi buyurtma: ${data.fromAddress} → ${data.toAddress}`, { duration: 5000 });
@@ -97,6 +119,26 @@ export default function DriverPanel() {
       await loadDriverData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Holatni yangilashda xatolik.');
+    }
+  };
+
+  const handleWithdrawSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingWithdraw(true);
+    try {
+      await api.post('/Withdrawals', {
+        amount: Number(withdrawAmount),
+        cardNumber: withdrawCard || null,
+      });
+      toast.success('Pul yechish sorovi yuborildi!');
+      setWithdrawAmount('');
+      setWithdrawCard('');
+      setShowWithdrawForm(false);
+      await loadDriverData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Sorov yuborishda xatolik yuz berdi.');
+    } finally {
+      setSubmittingWithdraw(false);
     }
   };
 
@@ -173,6 +215,77 @@ export default function DriverPanel() {
             {driverInfo?.vehicle ? `${driverInfo.vehicle.brand} ${driverInfo.vehicle.model}` : 'Biriktirilmagan'}
           </p>
         </div>
+      </div>
+
+      {/* Hamyon bolimi */}
+      <div className="mb-8">
+        <div className="bg-gray-900 rounded-2xl p-6 text-white mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <WalletIcon className="w-5 h-5" />
+                <span className="text-xs text-gray-400 uppercase tracking-wide">Hamyon balansi</span>
+              </div>
+              <p className="text-3xl font-bold">{wallet?.balance.toLocaleString()}</p>
+              <p className="text-gray-400 text-sm mt-1">{wallet?.currency}</p>
+            </div>
+            <button
+              onClick={() => setShowWithdrawForm(!showWithdrawForm)}
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <ArrowUpFromLine className="w-4 h-4" /> Pul yechish
+            </button>
+          </div>
+
+          {showWithdrawForm && (
+            <form onSubmit={handleWithdrawSubmit} className="mt-4 pt-4 border-t border-gray-700 space-y-3">
+              <input
+                type="number"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                placeholder="Summa (som)"
+                required
+                min="1"
+                className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <input
+                type="text"
+                value={withdrawCard}
+                onChange={(e) => setWithdrawCard(e.target.value)}
+                placeholder="Karta raqami (ixtiyoriy)"
+                className="w-full px-3 py-2.5 bg-white/10 border border-white/20 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                type="submit"
+                disabled={submittingWithdraw}
+                className="w-full py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                {submittingWithdraw ? 'Yuborilmoqda...' : 'Sorov yuborish'}
+              </button>
+            </form>
+          )}
+        </div>
+
+        {withdrawals.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h3 className="text-sm font-semibold text-gray-900">Pul yechish tarixi</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {withdrawals.map((w) => (
+                <div key={w.id} className="flex items-center justify-between px-6 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{w.amount.toLocaleString()} som</p>
+                    <p className="text-xs text-gray-400">{new Date(w.createdAt).toLocaleString()}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${withdrawalStatusStyles[w.status]}`}>
+                    {withdrawalStatusLabels[w.status]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {activeOrders.length > 0 && (

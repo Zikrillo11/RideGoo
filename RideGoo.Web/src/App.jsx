@@ -9,6 +9,7 @@ import Wallet from './pages/customer/Wallet';
 import MyOrders from './pages/customer/MyOrders';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminPromoCodes from './pages/admin/AdminPromoCodes';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import DriverPanel from './pages/driver/DriverPanel';
 
 function ProtectedRoute({ children }) {
@@ -38,6 +39,7 @@ function AppRoutes() {
         <Route path="/my-orders" element={<MyOrders />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/promo-codes" element={<AdminPromoCodes />} />
+        <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
         <Route path="/driver" element={<DriverPanel />} />
       </Route>
     </Routes>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Car, MapPin, History, Wallet, Users, Tag, LogOut, Truck, Menu, X } from 'lucide-react';
+import { Car, MapPin, History, Wallet, Users, Tag, LogOut, Truck, Menu, X, ArrowUpFromLine } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
@@ -34,7 +34,6 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* Mobil uchun fon (sidebar ochilganda orqa fonni qoraytiradi) */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -42,7 +41,6 @@ export default function Layout() {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`w-64 bg-gray-950 flex flex-col fixed h-screen z-50 transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -76,6 +74,7 @@ export default function Layout() {
             <>
               {navItem('/admin/users', 'Foydalanuvchilar', Users)}
               {navItem('/admin/promo-codes', 'Promo-kodlar', Tag)}
+              {navItem('/admin/withdrawals', 'Pul yechish', ArrowUpFromLine)}
             </>
           )}
 
@@ -102,9 +101,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* Content */}
       <div className="lg:ml-64 flex-1 min-h-screen w-full">
-        {/* Mobil uchun yuqori panel (faqat hamburger tugma) */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-4 bg-white border-b border-gray-200 sticky top-0 z-30">
           <button onClick={() => setSidebarOpen(true)} className="text-gray-700">
             <Menu className="w-6 h-6" />
