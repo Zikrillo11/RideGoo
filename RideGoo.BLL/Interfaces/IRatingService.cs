@@ -7,5 +7,6 @@ namespace RideGoo.BLL.Interfaces;
 public interface IRatingService
 {
     Task<Result<RatingForResultDto>> CreateAsync(Guid ratedByUserId, RatingForCreateDto dto);
+    Task<Result<RatingForResultDto>> RateCustomerAsync(Guid driverUserId, RatingForCreateDto dto);
     Task<Result<PagedResult<RatingForShortResultDto>>> GetByDriverIdAsync(Guid driverId, PaginationParams paginationParams);
 }

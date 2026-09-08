@@ -29,6 +29,17 @@ public class RatingsController : BaseApiController
         var result = await _ratingService.CreateAsync(userId, dto);
         return HandleResult(result);
     }
+    /// <summary>Haydovchi mijozni baholaydi.</summary>
+    [Authorize(Roles = "Driver")]
+    [HttpPost("rate-customer")]
+    [ProducesResponseType(typeof(RatingForResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RateCustomer([FromBody] RatingForCreateDto dto)
+    {
+        var driverUserId = GetCurrentUserId();
+        var result = await _ratingService.RateCustomerAsync(driverUserId, dto);
+        return HandleResult(result);
+    }
 
     /// <summary>Haydovchining barcha baholarini sahifalab qaytaradi. Hammaga ochiq.</summary>
     [AllowAnonymous]
