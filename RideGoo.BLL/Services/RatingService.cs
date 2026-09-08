@@ -57,6 +57,41 @@ public class RatingService : IRatingService
         }
     }
 
+    public async Task<Result<RatingForResultDto>> RateCustomerAsync(Guid driverUserId, RatingForCreateDto dto)
+    {
+        var order = await _unitOfWork.Orders.Query()
+            .Include(o => o.Driver)
+            .Include(o => o.Customer)
+            .FirstOrDefaultAsync(o => o.Id == dto.OrderId);
+
+        if (order is null)
+            return Result<RatingForResultDto>.Failure("Buyurtma topilmadi.");
+
+        if (order.Driver is null || order.Driver.UserId != driverUserId)
+            return Result<RatingForResultDto>.Failure("Bu buyurtma sizga tegishli emas.");
+
+        try
+        {
+            var rating = Rating.Create(dto.OrderId, driverUserId, dto.Score, dto.Comment);
+            await _unitOfWork.Ratings.AddAsync(rating);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<RatingForResultDto>.Success(new RatingForResultDto
+            {
+                Id = rating.Id,
+                OrderId = rating.OrderId,
+                RatedByUserName = order.Driver.User?.FullName ?? "",
+                Score = rating.Score,
+                Comment = rating.Comment,
+                CreatedAt = rating.CreatedAt
+            });
+        }
+        catch (DomainException ex)
+        {
+            return Result<RatingForResultDto>.Failure(ex.Message);
+        }
+    }
+
     public async Task<Result<PagedResult<RatingForShortResultDto>>> GetByDriverIdAsync(Guid driverId, PaginationParams paginationParams)
     {
         var query = _unitOfWork.Ratings.Query()
