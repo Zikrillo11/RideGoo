@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Power, MapPin, Clock, CheckCircle2, Navigation, Wallet as WalletIcon, ArrowUpFromLine } from 'lucide-react';
+import { Power, MapPin, Clock, CheckCircle2, Navigation, Wallet as WalletIcon, ArrowUpFromLine, Star } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useSignalR } from '../../hooks/useSignalR';
 import { SkeletonStatCard, SkeletonList, SkeletonLine } from '../../components/Skeleton';
+import CustomerRatingModal from '../../components/CustomerRatingModal';
 
 const statusLabels = {
   Completed: 'Yakunlandi',
@@ -34,6 +35,7 @@ export default function DriverPanel() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [ratingOrderId, setRatingOrderId] = useState(null);
 
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -117,6 +119,10 @@ export default function DriverPanel() {
       await api.put(`/Orders/${orderId}/status`, { status });
       toast.success(statusMessages[status] || 'Holat yangilandi.');
       await loadDriverData();
+
+      if (status === 'Completed') {
+        setRatingOrderId(orderId);
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || 'Holatni yangilashda xatolik.');
     }
@@ -217,7 +223,6 @@ export default function DriverPanel() {
         </div>
       </div>
 
-      {/* Hamyon bolimi */}
       <div className="mb-8">
         <div className="bg-gray-900 rounded-2xl p-6 text-white mb-4">
           <div className="flex items-center justify-between">
@@ -327,18 +332,36 @@ export default function DriverPanel() {
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Tarix</h3>
           <div className="bg-white rounded-2xl border border-gray-200 divide-y divide-gray-100">
             {historyOrders.map((order) => (
-              <OrderRow key={order.id} order={order} onAccept={handleAccept} onUpdateStatus={handleUpdateStatus} />
+              <div key={order.id} className="p-5">
+                <OrderRow order={order} onAccept={handleAccept} onUpdateStatus={handleUpdateStatus} noPadding />
+                {order.status === 'Completed' && (
+                  <button
+                    onClick={() => setRatingOrderId(order.id)}
+                    className="flex items-center gap-1 mt-2 px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full hover:bg-amber-100 transition-colors"
+                  >
+                    <Star className="w-3.5 h-3.5" /> Mijozni baholash
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
+      )}
+
+      {ratingOrderId && (
+        <CustomerRatingModal
+          orderId={ratingOrderId}
+          onClose={() => setRatingOrderId(null)}
+          onSuccess={() => loadDriverData()}
+        />
       )}
     </div>
   );
 }
 
-function OrderRow({ order, onAccept, onUpdateStatus }) {
+function OrderRow({ order, onAccept, onUpdateStatus, noPadding }) {
   return (
-    <div className="p-5">
+    <div className={noPadding ? '' : 'p-5'}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
