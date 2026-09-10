@@ -22,9 +22,18 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageReference Include="Telegram.Bot" Version="22.10.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RideGoo.BLL\RideGoo.BLL.csproj" />
+    <ProjectReference Include="..\RideGoo.DAL\RideGoo.DAL.csproj" />
+    <ProjectReference Include="..\RideGoo.Domain\RideGoo.Domain.csproj" />
+    <ProjectReference Include="..\RideGoo.Shared\RideGoo.Shared.csproj" />
   </ItemGroup>
 </Project>
