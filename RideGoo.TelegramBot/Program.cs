@@ -7,7 +7,12 @@ using RideGoo.BLL.Services;
 using RideGoo.DAL.Data;
 using RideGoo.DAL.Repositories;
 using RideGoo.Domain.Interfaces;
+using RideGoo.TelegramBot;
+using RideGoo.TelegramBot.Handlers;
 using Telegram.Bot;
+using Telegram.Bot.Polling;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -17,8 +22,9 @@ builder.Configuration.AddUserSecrets<Program>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ---------- Unit of Work + Services (backend bilan bir xil) ----------
+// ---------- Unit of Work + Services ----------
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<INotificationHub, NullNotificationHub>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
@@ -35,9 +41,35 @@ builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken
 
 var app = builder.Build();
 
-// ---------- Botni ishga tushirish ----------
 var botClient = app.Services.GetRequiredService<ITelegramBotClient>();
 var me = await botClient.GetMe();
 Console.WriteLine($"Bot ishga tushdi: @{me.Username}");
 
-app.Run();
+using var cts = new CancellationTokenSource();
+
+var receiverOptions = new ReceiverOptions
+{
+    AllowedUpdates = Array.Empty<UpdateType>()
+};
+
+botClient.StartReceiving(
+    updateHandler: async (bot, update, token) =>
+    {
+        using var scope = app.Services.CreateScope();
+        var handler = new UpdateHandler(
+            scope.ServiceProvider.GetRequiredService<IAuthService>());
+
+        await handler.HandleUpdateAsync(bot, update, token);
+    },
+    errorHandler: (bot, exception, token) =>
+    {
+        Console.WriteLine($"Xatolik: {exception.Message}");
+        return Task.CompletedTask;
+    },
+    receiverOptions: receiverOptions,
+    cancellationToken: cts.Token
+);
+
+Console.WriteLine("Bot xabarlarni kutmoqda... Toxtatish uchun Ctrl+C bosing.");
+
+await app.RunAsync();
