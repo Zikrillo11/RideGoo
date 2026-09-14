@@ -72,4 +72,28 @@ public class AuthService : IAuthService
             ExpiresAt = expiresAt
         });
     }
+    public async Task<Result<AuthForResultDto>> LoginWithTelegramAsync(string phoneNumber, long telegramChatId)
+    {
+        var user = await _unitOfWork.Users.GetByPhoneNumberAsync(phoneNumber);
+
+        if (user is null)
+            return Result<AuthForResultDto>.Failure("Bu raqam bilan hisob topilmadi. Avval Website orqali royxatdan oting.");
+
+        if (!user.IsActive)
+            return Result<AuthForResultDto>.Failure("Hisobingiz bloklangan.");
+
+        user.LinkTelegram(telegramChatId);
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        var (token, expiresAt) = _jwtService.GenerateToken(user);
+
+        return Result<AuthForResultDto>.Success(new AuthForResultDto
+        {
+            Token = token,
+            FullName = user.FullName,
+            Role = user.Role.ToString(),
+            ExpiresAt = expiresAt
+        });
+    }
 }
