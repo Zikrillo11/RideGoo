@@ -9,6 +9,7 @@ using RideGoo.DAL.Repositories;
 using RideGoo.Domain.Interfaces;
 using RideGoo.TelegramBot;
 using RideGoo.TelegramBot.Handlers;
+using RideGoo.TelegramBot.Services;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -29,6 +30,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
+builder.Services.AddSingleton<UserStateService>();
 
 // ---------- AutoMapper ----------
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RideGoo.BLL.Mappings.MappingProfile>());
