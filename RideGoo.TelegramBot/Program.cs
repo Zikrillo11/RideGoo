@@ -59,7 +59,10 @@ botClient.StartReceiving(
     {
         using var scope = app.Services.CreateScope();
         var handler = new UpdateHandler(
-            scope.ServiceProvider.GetRequiredService<IAuthService>());
+    scope.ServiceProvider.GetRequiredService<IAuthService>(),
+    scope.ServiceProvider.GetRequiredService<IOrderService>(),
+    scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+    scope.ServiceProvider.GetRequiredService<UserStateService>());
 
         await handler.HandleUpdateAsync(bot, update, token);
     },
