@@ -160,8 +160,14 @@ public class UpdateHandler
 
             await bot.SendMessage(
                 chatId: chatId,
-                text: "Qabul qilindi ✅\n\nEndi qayerga borishni xohlaysiz? Joylashuvni yuboring. 📍",
-                replyMarkup: BuildLocationKeyboard(),
+                text: "Qabul qilindi ✅\n\n" +
+                      "Endi *qayerga* borishni xohlaysiz?\n\n" +
+                      "Hozirgi turgan joyingiz emas, balki *boshqa nuqtani* tanlash uchun:\n" +
+                      "1️⃣ Xabar yozish qatori yonidagi 📎 (skrepka) belgisini bosing\n" +
+                      "2️⃣ \"Location\" (Joylashuv) ni tanlang\n" +
+                      "3️⃣ Ochilgan xaritada kerakli nuqtani barmog'ingiz bilan bosib, biroz ushlab turing (yoki xaritani suring)\n" +
+                      "4️⃣ Pastda chiqqan \"Ushbu joyni yuborish\" (Send this location) tugmasini bosing",
+                replyMarkup: new ReplyKeyboardRemove(),
                 cancellationToken: cancellationToken);
             return;
         }
