@@ -2,6 +2,7 @@
 using RideGoo.Domain.Interfaces;
 using RideGoo.Domain.ValueObjects;
 using RideGoo.Shared.DTOs.Order;
+using RideGoo.Shared.Params;
 using RideGoo.TelegramBot.Services;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -15,17 +16,20 @@ public class UpdateHandler
     private readonly IOrderService _orderService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly UserStateService _userStateService;
+    private readonly GeocodingService _geocodingService;
 
     public UpdateHandler(
         IAuthService authService,
         IOrderService orderService,
         IUnitOfWork unitOfWork,
-        UserStateService userStateService)
+        UserStateService userStateService,
+        GeocodingService geocodingService)
     {
         _authService = authService;
         _orderService = orderService;
         _unitOfWork = unitOfWork;
         _userStateService = userStateService;
+        _geocodingService = geocodingService;
     }
 
     public async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
@@ -71,6 +75,12 @@ public class UpdateHandler
             return;
         }
 
+        if (message.Text == "📋 Buyurtmalarim")
+        {
+            await HandleMyOrdersAsync(bot, chatId, cancellationToken);
+            return;
+        }
+
         await bot.SendMessage(
             chatId: chatId,
             text: "Buyruqni tushunmadim. /start ni yuboring.",
@@ -85,14 +95,7 @@ public class UpdateHandler
 
         if (loginResult.IsSuccess)
         {
-            var mainMenu = new ReplyKeyboardMarkup(new[]
-            {
-                new KeyboardButton[] { "🚕 Buyurtma berish" },
-                new KeyboardButton[] { "📋 Buyurtmalarim" },
-            })
-            {
-                ResizeKeyboard = true
-            };
+            var mainMenu = BuildMainMenu();
 
             await bot.SendMessage(
                 chatId: chatId,
@@ -110,7 +113,6 @@ public class UpdateHandler
         }
     }
 
-    // "🚕 Buyurtma berish" bosilganda ishga tushadi
     private async Task HandleOrderStartAsync(ITelegramBotClient bot, long chatId, CancellationToken cancellationToken)
     {
         var customer = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.TelegramChatId == chatId);
@@ -124,11 +126,12 @@ public class UpdateHandler
             return;
         }
 
-        // Foydalanuvchi holatini "qayerdan kutmoqda" ga o'rnatamiz
         var state = _userStateService.GetOrCreate(chatId);
         state.Stage = OrderStage.WaitingPickupLocation;
         state.PickupLocation = null;
+        state.PickupAddress = null;
         state.DestinationLocation = null;
+        state.DestinationAddress = null;
 
         await bot.SendMessage(
             chatId: chatId,
@@ -137,12 +140,10 @@ public class UpdateHandler
             cancellationToken: cancellationToken);
     }
 
-    // Foydalanuvchi joylashuv (Location) yuborganda ishga tushadi
     private async Task HandleLocationAsync(ITelegramBotClient bot, long chatId, Location location, CancellationToken cancellationToken)
     {
         var state = _userStateService.GetOrCreate(chatId);
 
-        // Hozircha hech qanday buyurtma jarayoni ketmayotgan bo'lsa
         if (state.Stage == OrderStage.None)
         {
             await bot.SendMessage(
@@ -152,60 +153,48 @@ public class UpdateHandler
             return;
         }
 
-        // 1-bosqich: "qayerdan" joylashuvi keldi
         if (state.Stage == OrderStage.WaitingPickupLocation)
         {
             state.PickupLocation = GeoLocation.Create(location.Latitude, location.Longitude);
+            state.PickupAddress = await _geocodingService.GetAddressAsync(location.Latitude, location.Longitude);
             state.Stage = OrderStage.WaitingDestinationLocation;
 
             await bot.SendMessage(
                 chatId: chatId,
-                text: "Qabul qilindi ✅\n\n" +
+                text: $"Qabul qilindi ✅\n📍 {state.PickupAddress}\n\n" +
                       "Endi *qayerga* borishni xohlaysiz?\n\n" +
-                      "Hozirgi turgan joyingiz emas, balki *boshqa nuqtani* tanlash uchun:\n" +
+                      "Boshqa nuqtani tanlash uchun:\n" +
                       "1️⃣ Xabar yozish qatori yonidagi 📎 (skrepka) belgisini bosing\n" +
                       "2️⃣ \"Location\" (Joylashuv) ni tanlang\n" +
-                      "3️⃣ Ochilgan xaritada kerakli nuqtani barmog'ingiz bilan bosib, biroz ushlab turing (yoki xaritani suring)\n" +
-                      "4️⃣ Pastda chiqqan \"Ushbu joyni yuborish\" (Send this location) tugmasini bosing",
+                      "3️⃣ Xaritada kerakli nuqtani bosib, biroz ushlab turing\n" +
+                      "4️⃣ \"Ushbu joyni yuborish\" tugmasini bosing",
                 replyMarkup: new ReplyKeyboardRemove(),
                 cancellationToken: cancellationToken);
             return;
         }
 
-        // 2-bosqich: "qayerga" joylashuvi keldi -> buyurtma yaratamiz
         if (state.Stage == OrderStage.WaitingDestinationLocation)
         {
             state.DestinationLocation = GeoLocation.Create(location.Latitude, location.Longitude);
+            state.DestinationAddress = await _geocodingService.GetAddressAsync(location.Latitude, location.Longitude);
 
             var customer = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.TelegramChatId == chatId);
-
-            var mainMenu = new ReplyKeyboardMarkup(new[]
-            {
-                new KeyboardButton[] { "🚕 Buyurtma berish" },
-                new KeyboardButton[] { "📋 Buyurtmalarim" },
-            })
-            {
-                ResizeKeyboard = true
-            };
+            var mainMenu = BuildMainMenu();
 
             if (customer is null)
             {
                 _userStateService.Reset(chatId);
-                await bot.SendMessage(
-                    chatId: chatId,
-                    text: "❌ Xatolik: foydalanuvchi topilmadi. /start orqali qayta kiring.",
-                    replyMarkup: mainMenu,
-                    cancellationToken: cancellationToken);
+                await bot.SendMessage(chatId, "❌ Xatolik: foydalanuvchi topilmadi. /start orqali qayta kiring.", replyMarkup: mainMenu, cancellationToken: cancellationToken);
                 return;
             }
 
             var dto = new OrderForCreateDto
             {
-                FromAddress = $"Joylashuv ({state.PickupLocation!.Latitude:F5}, {state.PickupLocation.Longitude:F5})",
-                FromLatitude = state.PickupLocation.Latitude,
+                FromAddress = state.PickupAddress!,
+                FromLatitude = state.PickupLocation!.Latitude,
                 FromLongitude = state.PickupLocation.Longitude,
 
-                ToAddress = $"Joylashuv ({state.DestinationLocation.Latitude:F5}, {state.DestinationLocation.Longitude:F5})",
+                ToAddress = state.DestinationAddress!,
                 ToLatitude = state.DestinationLocation.Latitude,
                 ToLongitude = state.DestinationLocation.Longitude,
 
@@ -233,13 +222,65 @@ public class UpdateHandler
             }
             else
             {
-                await bot.SendMessage(
-                    chatId: chatId,
-                    text: $"❌ {result.ErrorMessage}",
-                    replyMarkup: mainMenu,
-                    cancellationToken: cancellationToken);
+                await bot.SendMessage(chatId, $"❌ {result.ErrorMessage}", replyMarkup: mainMenu, cancellationToken: cancellationToken);
             }
         }
+    }
+
+    private async Task HandleMyOrdersAsync(ITelegramBotClient bot, long chatId, CancellationToken cancellationToken)
+    {
+        var customer = await _unitOfWork.Users.FirstOrDefaultAsync(u => u.TelegramChatId == chatId);
+
+        if (customer is null)
+        {
+            await bot.SendMessage(chatId, "Avval tizimga kiring. /start ni yuboring.", cancellationToken: cancellationToken);
+            return;
+        }
+
+        var paginationParams = new PaginationParams { PageNumber = 1, PageSize = 5 };
+        var result = await _orderService.GetByCustomerIdAsync(customer.Id, paginationParams);
+
+        if (!result.IsSuccess || result.Data is null || result.Data.Items.Count == 0)
+        {
+            await bot.SendMessage(chatId, "Sizda hali buyurtmalar yo'q. \"🚕 Buyurtma berish\" orqali birinchi buyurtmangizni bering!", cancellationToken: cancellationToken);
+            return;
+        }
+
+        var text = "📋 So'nggi buyurtmalaringiz:\n\n";
+
+        foreach (var order in result.Data.Items)
+        {
+            text += $"🔸 {TranslateStatus(order.Status)}\n" +
+                    $"📍 {order.FromAddress}\n" +
+                    $"🏁 {order.ToAddress}\n" +
+                    $"💰 {order.EstimatedPrice:N0} so'm | 🕒 {order.CreatedAt:dd.MM.yyyy HH:mm}\n\n";
+        }
+
+        await bot.SendMessage(chatId, text, cancellationToken: cancellationToken);
+    }
+
+    private static string TranslateStatus(string status) => status switch
+    {
+        "Pending" => "⏳ Kutilmoqda",
+        "Accepted" => "✅ Qabul qilindi",
+        "DriverArrived" => "🚗 Haydovchi yetib keldi",
+        "InProgress" => "🛣️ Yo'lda",
+        "Completed" => "🏁 Yakunlandi",
+        "CancelledByCustomer" => "❌ Mijoz bekor qildi",
+        "CancelledByDriver" => "❌ Haydovchi bekor qildi",
+        _ => status
+    };
+
+    private static ReplyKeyboardMarkup BuildMainMenu()
+    {
+        return new ReplyKeyboardMarkup(new[]
+        {
+            new KeyboardButton[] { "🚕 Buyurtma berish" },
+            new KeyboardButton[] { "📋 Buyurtmalarim" },
+        })
+        {
+            ResizeKeyboard = true
+        };
     }
 
     private static ReplyKeyboardMarkup BuildLocationKeyboard()
