@@ -99,4 +99,12 @@ public class User : BaseEntity
         Wallet = wallet;
         MarkAsUpdated();
     }
+    public void ChangePassword(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            throw new DomainException("Yangi parol bo'sh bo'lishi mumkin emas.");
+
+        PasswordHash = newPasswordHash;
+        MarkAsUpdated();
+    }
 }

@@ -14,6 +14,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+const fromIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:18px;height:18px;border-radius:9999px;background:#111827;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
+const toIcon = L.divIcon({
+  className: '',
+  html: '<div style="width:18px;height:18px;border-radius:9999px;background:#ffffff;border:3px solid #111827;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>',
+  iconSize: [18, 18],
+  iconAnchor: [9, 9],
+});
+
 const UZBEKISTAN_CENTER = [41.377491, 64.585262];
 const DEFAULT_ZOOM = 6;
 
@@ -404,16 +418,29 @@ export default function OrderCreate() {
           )}
         </div>
 
-        <div className="lg:col-span-3 rounded-2xl overflow-hidden border border-gray-200 h-[640px]">
+                        <div className="lg:col-span-3 relative rounded-2xl overflow-hidden border border-gray-200 h-[640px]">
+          <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm rounded-lg border border-gray-200 shadow-sm px-3 py-2 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-gray-900 border-2 border-white shadow" />
+              <span className="text-xs font-medium text-gray-600">Qayerdan</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-white border-2 border-gray-900" />
+              <span className="text-xs font-medium text-gray-600">Qayerga</span>
+            </div>
+          </div>
           <MapContainer center={UZBEKISTAN_CENTER} zoom={DEFAULT_ZOOM} style={{ height: '100%', width: '100%' }}>
             <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution="OpenStreetMap contributors"
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+              attribution="Tiles &copy; Esri"
+            />
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"
             />
             <LocationPicker onSelect={handleMapClick} />
             <FlyToLocation position={flyTarget} />
-            {fromCoords && <Marker position={fromCoords} />}
-            {toCoords && <Marker position={toCoords} />}
+            {fromCoords && <Marker position={fromCoords} icon={fromIcon} />}
+            {toCoords && <Marker position={toCoords} icon={toIcon} />}
             {routeCoords.length > 0 && (
               <Polyline positions={routeCoords} color="#1f2937" weight={4} opacity={0.8} />
             )}
