@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ridegoo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ridegoo_pg_data:/var/lib/postgresql/data
+
+  ridegoo-api:
+    build:
+      context: .
+      dockerfile: RideGoo.Api/Dockerfile
+    container_name: ridegoo-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      JwtSettings__Secret: ${JWT_SECRET}
+      AdminSeed__PhoneNumber: ${ADMIN_PHONE}
+      AdminSeed__Password: ${ADMIN_PASSWORD}
+    ports:
+      - "5000:8080"
+
+  ridegoo-telegrambot:
+    build:
+      context: .
+      dockerfile: RideGoo.TelegramBot/Dockerfile
+    container_name: ridegoo-telegrambot
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - ridegoo-api
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}"
+      TelegramBot__Token: ${TELEGRAM_BOT_TOKEN}
+      JwtSettings__Secret: ${JWT_SECRET}
+      JwtSettings__Issuer: RideGooApi
+      JwtSettings__Audience: RideGooClient
+      JwtSettings__ExpiryMinutes: "1440"
+
+  ridegoo-web:
+    build:
+      context: .
+      dockerfile: RideGoo.Web/Dockerfile
+    container_name: ridegoo-web
+    restart: unless-stopped
+    depends_on:
+      - ridegoo-api
+    ports:
+      - "3000:80"
+
+volumes:
+  ridegoo_pg_data:

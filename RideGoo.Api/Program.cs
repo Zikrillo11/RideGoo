@@ -1,58 +1,101 @@
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using RideGoo.Api.Configuration;
 using RideGoo.Api.Filters;
+using RideGoo.Api.Hubs;
 using RideGoo.Api.Middleware;
 using RideGoo.DAL.Data;
-using RideGoo.Api.Hubs;
+using Serilog;
+using Serilog.Events;
 
-var builder = WebApplication.CreateBuilder(args);
+// ---------- Serilog'ni eng boshida sozlaymiz ----------
+// (bu "bootstrap logger" — hali WebApplicationBuilder yaratilmasdan oldingi xatolarni ham ushlab qoladi)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/log-.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 14)
+    .CreateLogger();
 
-// ---------- Configuration modullari ----------
-builder.Services.AddDatabaseConfiguration(builder.Configuration);
-builder.Services.AddApplicationServicesConfiguration();
-builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
-builder.Services.AddSwaggerConfiguration();
-
-builder.Services.AddControllers(options =>
-
+try
 {
-    options.Filters.Add<ValidationFilter>();
+    Log.Information("RideGoo.Api ishga tushmoqda...");
 
-});
+    var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSignalR();
+    // Endi ASP.NET Core'ning o'zi ham Serilog orqali log yozadi
+    builder.Host.UseSerilog();
 
-builder.Services.AddCorsConfiguration();
+    // ---------- Configuration modullari ----------
+    builder.Services.AddDatabaseConfiguration(builder.Configuration);
+    builder.Services.AddApplicationServicesConfiguration();
+    builder.Services.AddJwtAuthenticationConfiguration(builder.Configuration);
+    builder.Services.AddSwaggerConfiguration();
 
-// ...
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ValidationFilter>();
+    });
 
-var app = builder.Build();
+    builder.Services.AddSignalR();
 
-app.UseGlobalExceptionHandling();
+    builder.Services.AddCorsConfiguration();
 
-// Muhim: UseCorsConfiguration() — UseAuthentication()dan OLDIN turishi kerak
-app.UseCorsConfiguration(); 
+    // ---------- Rate limiting ----------
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.AddFixedWindowLimiter("AuthLimiter", opt =>
+        {
+            opt.PermitLimit = 5;
+            opt.Window = TimeSpan.FromMinutes(1);
+            opt.QueueLimit = 0;
+        });
 
-// ---------- Admin foydalanuvchini avtomatik yaratish ----------
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAdminAsync(dbContext);
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    });
+
+    var app = builder.Build();
+
+    app.UseGlobalExceptionHandling();
+
+    // Har bir HTTP so'rovni (endpoint, status kod, davomiylik) avtomatik log qiladi
+    app.UseSerilogRequestLogging();
+
+    app.UseCorsConfiguration();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+        await DbSeeder.SeedAdminAsync(dbContext, app.Configuration);
+    }
+
+    // ---------- Middleware pipeline ----------
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseHttpsRedirection();
+
+    app.UseRateLimiter();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapHub<RideHub>("/hubs/ride");
+
+    app.MapControllers();
+
+    app.Run();
 }
-
-// ---------- Middleware pipeline ----------
-if (app.Environment.IsDevelopment())
+catch (Exception ex)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Fatal(ex, "RideGoo.Api kutilmagan xatolik bilan to'xtadi");
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapHub<RideHub>("/hubs/ride");
-
-app.MapControllers();
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}

@@ -72,6 +72,7 @@ public class AuthService : IAuthService
             ExpiresAt = expiresAt
         });
     }
+
     public async Task<Result<AuthForResultDto>> LoginWithTelegramAsync(string phoneNumber, long telegramChatId)
     {
         var user = await _unitOfWork.Users.GetByPhoneNumberAsync(phoneNumber);
@@ -95,5 +96,31 @@ public class AuthService : IAuthService
             Role = user.Role.ToString(),
             ExpiresAt = expiresAt
         });
+    }
+
+    public async Task<Result<bool>> ChangePasswordAsync(Guid userId, AuthForChangePasswordDto dto)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+
+        if (user is null)
+            return Result<bool>.Failure("Foydalanuvchi topilmadi.");
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.OldPassword, user.PasswordHash))
+            return Result<bool>.Failure("Joriy parol noto'g'ri.");
+
+        try
+        {
+            var newHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.ChangePassword(newHash);
+
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<bool>.Success(true);
+        }
+        catch (DomainException ex)
+        {
+            return Result<bool>.Failure(ex.Message);
+        }
     }
 }

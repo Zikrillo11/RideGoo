@@ -32,6 +32,13 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddSingleton<UserStateService>();
 
+// ---------- Manzilni aniqlash (Nominatim) ----------
+builder.Services.AddHttpClient<GeocodingService>(client =>
+{
+    client.BaseAddress = new Uri("https://nominatim.openstreetmap.org/");
+    client.DefaultRequestHeaders.Add("User-Agent", "RideGooTelegramBot/1.0");
+});
+
 // ---------- AutoMapper ----------
 builder.Services.AddAutoMapper(cfg => cfg.AddProfile<RideGoo.BLL.Mappings.MappingProfile>());
 
@@ -59,10 +66,11 @@ botClient.StartReceiving(
     {
         using var scope = app.Services.CreateScope();
         var handler = new UpdateHandler(
-    scope.ServiceProvider.GetRequiredService<IAuthService>(),
-    scope.ServiceProvider.GetRequiredService<IOrderService>(),
-    scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
-    scope.ServiceProvider.GetRequiredService<UserStateService>());
+            scope.ServiceProvider.GetRequiredService<IAuthService>(),
+            scope.ServiceProvider.GetRequiredService<IOrderService>(),
+            scope.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            scope.ServiceProvider.GetRequiredService<UserStateService>(),
+            scope.ServiceProvider.GetRequiredService<GeocodingService>());
 
         await handler.HandleUpdateAsync(bot, update, token);
     },
@@ -75,6 +83,6 @@ botClient.StartReceiving(
     cancellationToken: cts.Token
 );
 
-Console.WriteLine("Bot xabarlarni kutmoqda... Toxtatish uchun Ctrl+C bosing.");
+Console.WriteLine("Bot xabarlarni kutmoqda... To'xtatish uchun Ctrl+C bosing.");
 
 await app.RunAsync();

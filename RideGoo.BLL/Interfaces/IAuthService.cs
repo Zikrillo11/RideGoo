@@ -8,4 +8,5 @@ public interface IAuthService
     Task<Result<AuthForResultDto>> RegisterAsync(AuthForRegisterDto dto);
     Task<Result<AuthForResultDto>> LoginAsync(AuthForLoginDto dto);
     Task<Result<AuthForResultDto>> LoginWithTelegramAsync(string phoneNumber, long telegramChatId);
+    Task<Result<bool>> ChangePasswordAsync(Guid userId, AuthForChangePasswordDto dto);
 }

@@ -1,25 +1,23 @@
-﻿using RideGoo.Domain.ValueObjects; // GeoLocation shu yerda bo'lishi kerak — agar boshqa joyda bo'lsa, using'ni moslang
+﻿using RideGoo.Domain.ValueObjects;
 
 namespace RideGoo.TelegramBot.Services
 {
-    // Foydalanuvchi hozir qaysi bosqichda ekanini bildiradi
     public enum OrderStage
     {
-        None,                     // Hech narsa qilmayapti
-        WaitingPickupLocation,    // "Qayerdan" joylashuvini kutmoqda
-        WaitingDestinationLocation // "Qayerga" joylashuvini kutmoqda
+        None,
+        WaitingPickupLocation,
+        WaitingDestinationLocation
     }
 
-    // Har bir foydalanuvchi uchun vaqtinchalik ma'lumot (RAM'da saqlanadi)
     public class UserState
     {
         public OrderStage Stage { get; set; } = OrderStage.None;
         public GeoLocation? PickupLocation { get; set; }
+        public string? PickupAddress { get; set; }
         public GeoLocation? DestinationLocation { get; set; }
+        public string? DestinationAddress { get; set; }
     }
 
-    // Bu servis barcha foydalanuvchilarning holatini saqlaydi
-    // chatId (Telegram chat ID) -> UserState
     public class UserStateService
     {
         private readonly Dictionary<long, UserState> _states = new();

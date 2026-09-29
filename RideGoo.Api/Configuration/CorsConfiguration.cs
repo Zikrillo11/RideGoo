@@ -10,7 +10,10 @@ public static class CorsConfiguration
         {
             options.AddPolicy(PolicyName, policy =>
             {
-                policy.WithOrigins("http://localhost:5173", "https://localhost:5173") // Vite dev server manzili
+                policy.WithOrigins(
+                        "http://localhost:5173", "https://localhost:5173", // Vite dev server (Visual Studio)
+                        "http://localhost:3000"                            // Docker (nginx) manzili
+                      )
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
